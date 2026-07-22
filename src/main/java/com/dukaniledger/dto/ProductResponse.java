@@ -20,6 +20,8 @@ public class ProductResponse implements Serializable {
 
     private BigDecimal sellingPrice;
 
+    private BigDecimal buyingPrice;
+
     private Integer quantity;
 
     private String  createdByName;

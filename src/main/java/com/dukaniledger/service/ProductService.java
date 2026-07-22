@@ -36,6 +36,7 @@ public class ProductService {
         Product product = Product.builder()
                 .name(request.getName())
                 .category(request.getCategory())
+                .buyingPrice(request.getBuyingPrice())
                 .sellingPrice(request.getSellingPrice())
                 .quantity(request.getQuantity())
                 .createdBy(currentUserService.getCurrentUser())
@@ -47,6 +48,7 @@ public class ProductService {
                 .id(savedProduct.getId())
                 .name(savedProduct.getName())
                 .category(savedProduct.getCategory())
+                .buyingPrice(savedProduct.getBuyingPrice())
                 .sellingPrice(savedProduct.getSellingPrice())
                 .quantity(savedProduct.getQuantity())
                 .build();
@@ -59,6 +61,7 @@ public class ProductService {
                         .id(product.getId())
                         .name(product.getName())
                         .category(product.getCategory())
+                        .buyingPrice(product.getBuyingPrice())
                         .sellingPrice(product.getSellingPrice())
                         .quantity(product.getQuantity())
                         .createdByName(product.getCreatedBy() != null
@@ -78,6 +81,7 @@ public class ProductService {
                 .id(product.getId())
                 .name(product.getName())
                 .category(product.getCategory())
+                .buyingPrice(product.getBuyingPrice())
                 .sellingPrice(product.getSellingPrice())
                 .quantity(product.getQuantity())
                 .build();
@@ -101,6 +105,7 @@ public class ProductService {
 
         product.setName(request.getName());
         product.setCategory(request.getCategory());
+        product.setBuyingPrice(request.getBuyingPrice());
         product.setSellingPrice(request.getSellingPrice());
         product.setQuantity(request.getQuantity());
 
@@ -113,6 +118,7 @@ public class ProductService {
                 .id(updatedProduct.getId())
                 .name(updatedProduct.getName())
                 .category(updatedProduct.getCategory())
+                .buyingPrice(updatedProduct.getBuyingPrice())
                 .sellingPrice(updatedProduct.getSellingPrice())
                 .quantity(updatedProduct.getQuantity())
                 .build();
@@ -162,6 +168,8 @@ public class ProductService {
                 .name(product.getName())
 
                 .category(product.getCategory())
+
+                .buyingPrice(product.getBuyingPrice())
 
                 .sellingPrice(product.getSellingPrice())
 

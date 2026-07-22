@@ -15,7 +15,10 @@ public class CreateProductRequest {
     @NotBlank(message = "Category is required")
     private String category;
 
-    @DecimalMin(value = "0.01", message = "Sellong price must be greater than 0")
+    @DecimalMin(value = "0.01", message = "buying price must be greater than 0")
+    private BigDecimal buyingPrice;
+
+    @DecimalMin(value = "0.01", message = "Selling price must be greater than 0")
     private BigDecimal sellingPrice;
 
     @Min(value = 0, message = "Quantity cannot be negative")

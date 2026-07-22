@@ -27,6 +27,9 @@ public class Product {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal sellingPrice;
 
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal buyingPrice;
+
     @Column(nullable = false)
     private Integer quantity;
 
