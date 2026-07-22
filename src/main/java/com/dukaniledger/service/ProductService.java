@@ -5,6 +5,7 @@ import com.dukaniledger.dto.ProductResponse;
 import com.dukaniledger.entity.Product;
 import com.dukaniledger.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -117,6 +118,10 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
+    @Cacheable(
+            value = "products",
+            key = "#page + '-' + #size"
+    )
     public Page<ProductResponse> getProducts(
             int page,
             int size
