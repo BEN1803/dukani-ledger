@@ -5,6 +5,7 @@ import com.dukaniledger.dto.ProductResponse;
 import com.dukaniledger.entity.Product;
 import com.dukaniledger.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,10 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CurrentUserService currentUserService;
 
+    @CacheEvict(
+            value = "products",
+            allEntries = true
+    )
     public ProductResponse createProduct(CreateProductRequest request){
         if (productRepository.existsByName(request.getName())) {
             throw new RuntimeException("Product already exists.");
@@ -78,6 +83,11 @@ public class ProductService {
                 .build();
     }
 
+
+    @CacheEvict(
+            value = "products",
+            allEntries = true
+    )
     public ProductResponse updateProduct(
             Long id,
             CreateProductRequest request
@@ -108,6 +118,10 @@ public class ProductService {
                 .build();
     }
 
+    @CacheEvict(
+            value = "products",
+            allEntries = true
+    )
     public void deleteProduct(Long id){
 
         if(!productRepository.existsById(id)){
