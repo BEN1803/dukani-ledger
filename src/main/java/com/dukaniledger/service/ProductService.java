@@ -1,188 +1,122 @@
 package com.dukaniledger.service;
 
-import com.dukaniledger.dto.CreateProductRequest;
 import com.dukaniledger.dto.ProductResponse;
+import com.dukaniledger.dto.UpdateProductRequest;
+import com.dukaniledger.entity.Category;
 import com.dukaniledger.entity.Product;
+import com.dukaniledger.entity.User;
 import com.dukaniledger.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryService categoryService;
+    private final BusinessContextService businessContextService;
     private final CurrentUserService currentUserService;
+    private final ActivityLogService activityLogService;
 
-    @CacheEvict(
-            value = "products",
-            allEntries = true
-    )
-    public ProductResponse createProduct(CreateProductRequest request){
-        if (productRepository.existsByName(request.getName())) {
-            throw new RuntimeException("Product already exists.");
+
+    @CacheEvict(value = "products", allEntries = true)
+    public Product resolveOrCreateProduct(
+            String name,
+            Category category,
+            BigDecimal costPriceFromPurchase,
+            User owner
+    ){
+        Product product = productRepository
+                .findByNameIgnoreCaseAndCategory_Owner_Id(name, owner.getId())
+                .orElse(null);
+
+        User currentUser = currentUserService.getCurrentUser();
+
+        if (product == null) {
+            product = Product.builder()
+                    .name(name)
+                    .category(category)
+                    .costPrice(costPriceFromPurchase)
+                    .addedBy(currentUser)
+                    .updatedBy(currentUser)
+                    .build();
+
+            Product saved = productRepository.save(product);
+            saved.setProductId("PROD-" + String.format("%04d", saved.getId()));
+            return productRepository.save(saved);
         }
 
-        Product product = Product.builder()
-                .name(request.getName())
-                .category(request.getCategory())
-                .buyingPrice(request.getBuyingPrice())
-                .sellingPrice(request.getSellingPrice())
-                .quantity(request.getQuantity())
-                .createdBy(currentUserService.getCurrentUser())
-                .build();
 
-        Product savedProduct = productRepository.save(product);
-
-        return ProductResponse.builder()
-                .id(savedProduct.getId())
-                .name(savedProduct.getName())
-                .category(savedProduct.getCategory())
-                .buyingPrice(savedProduct.getBuyingPrice())
-                .sellingPrice(savedProduct.getSellingPrice())
-                .quantity(savedProduct.getQuantity())
-                .build();
+        product.setCostPrice(costPriceFromPurchase);
+        product.setCategory(category);
+        product.setUpdatedBy(currentUser);
+        return productRepository.save(product);
     }
 
-    public List<ProductResponse> getAllProducts(){
-        return productRepository.findAll()
-                .stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .category(product.getCategory())
-                        .buyingPrice(product.getBuyingPrice())
-                        .sellingPrice(product.getSellingPrice())
-                        .quantity(product.getQuantity())
-                        .createdByName(product.getCreatedBy() != null
-                        ? product.getCreatedBy().getEmail()
-                                : "Unknown"
-                        )
-                        .build()
-                )
-                .collect(Collectors.toList());
+    @CacheEvict(value = "products", allEntries = true)
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    public ProductResponse updateProduct(Long id, UpdateProductRequest request){
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        if (request.getSellingPrice() != null) {
+            product.setSellingPrice(request.getSellingPrice());
+        }
+
+        if (request.getCategoryName() != null && !request.getCategoryName().isBlank()) {
+            User owner = businessContextService.getOwnerForCurrentUser();
+            Category category = categoryService.resolveOrCreateCategory(request.getCategoryName(), owner);
+            product.setCategory(category);
+        }
+
+        product.setUpdatedBy(currentUserService.getCurrentUser());
+
+        Product updated = productRepository.save(product);
+        activityLogService.log("UPDATE_PRODUCT", "Product#" + updated.getId());
+
+        return mapToResponse(updated);
     }
 
     public ProductResponse getProductById(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
+        return mapToResponse(product);
+    }
 
+    @Cacheable(value = "products", key = "#root.target.currentOwnerId()")
+    public List<ProductResponse> getProducts(){
+        User owner = businessContextService.getOwnerForCurrentUser();
+        return productRepository.findByCategory_Owner_Id(owner.getId())
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    public Long currentOwnerId(){
+        return businessContextService.getOwnerForCurrentUser().getId();
+    }
+
+    private ProductResponse mapToResponse(Product product){
         return ProductResponse.builder()
                 .id(product.getId())
+                .productId(product.getProductId())
                 .name(product.getName())
-                .category(product.getCategory())
-                .buyingPrice(product.getBuyingPrice())
+                .category(product.getCategory() != null ? product.getCategory().getName() : null)
+                .costPrice(product.getCostPrice())
                 .sellingPrice(product.getSellingPrice())
-                .quantity(product.getQuantity())
-                .build();
-    }
-
-
-    @CacheEvict(
-            value = "products",
-            allEntries = true
-    )
-    public ProductResponse updateProduct(
-            Long id,
-            CreateProductRequest request
-    ) {
-
-        Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Product not found")
-                );
-
-
-        product.setName(request.getName());
-        product.setCategory(request.getCategory());
-        product.setBuyingPrice(request.getBuyingPrice());
-        product.setSellingPrice(request.getSellingPrice());
-        product.setQuantity(request.getQuantity());
-
-
-        Product updatedProduct =
-                productRepository.save(product);
-
-
-        return ProductResponse.builder()
-                .id(updatedProduct.getId())
-                .name(updatedProduct.getName())
-                .category(updatedProduct.getCategory())
-                .buyingPrice(updatedProduct.getBuyingPrice())
-                .sellingPrice(updatedProduct.getSellingPrice())
-                .quantity(updatedProduct.getQuantity())
-                .build();
-    }
-
-    @CacheEvict(
-            value = "products",
-            allEntries = true
-    )
-    public void deleteProduct(Long id){
-
-        if(!productRepository.existsById(id)){
-            throw new RuntimeException("Product not found");
-        }
-
-
-        productRepository.deleteById(id);
-    }
-
-    @Cacheable(
-            value = "products",
-            key = "#page + '-' + #size"
-    )
-    public Page<ProductResponse> getProducts(
-            int page,
-            int size
-    ){
-
-        Pageable pageable =
-                PageRequest.of(page, size);
-
-
-        return productRepository
-                .findAll(pageable)
-                .map(this::mapToResponse);
-
-    }
-
-    private ProductResponse mapToResponse(
-            Product product
-    ){
-
-        return ProductResponse.builder()
-
-                .id(product.getId())
-
-                .name(product.getName())
-
-                .category(product.getCategory())
-
-                .buyingPrice(product.getBuyingPrice())
-
-                .sellingPrice(product.getSellingPrice())
-
-                .quantity(product.getQuantity())
-
-                .createdByName(
-                        product.getCreatedBy() != null
-                                ?
-                                product.getCreatedBy().getEmail()
-                                :
-                                "Unknown"
-                )
-
+                .addedByName(product.getAddedBy() != null ? product.getAddedBy().getEmail() : "Unknown")
+                .updatedByName(product.getUpdatedBy() != null ? product.getUpdatedBy().getEmail() : "Unknown")
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .build();
     }
 }

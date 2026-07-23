@@ -1,12 +1,10 @@
 package com.dukaniledger.controller;
 
-import com.dukaniledger.dto.CreateProductRequest;
 import com.dukaniledger.dto.ProductResponse;
+import com.dukaniledger.dto.UpdateProductRequest;
 import com.dukaniledger.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,52 +15,26 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse createProduct(
-            @Valid @RequestBody CreateProductRequest request
-    ){
-        return productService.createProduct(request);
-    }
+    // Products are created only as a side effect of a purchase (see
+    // PurchaseController) - there's no direct "create product" endpoint.
 
     @GetMapping("/{id}")
     public ProductResponse getProduct(
             @PathVariable Long id
     ){
-
         return productService.getProductById(id);
-
     }
 
     @PutMapping("/{id}")
     public ProductResponse updateProduct(
             @PathVariable Long id,
-            @Valid @RequestBody CreateProductRequest request
+            @Valid @RequestBody UpdateProductRequest request
     ){
-
         return productService.updateProduct(id, request);
-
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteProduct(
-            @PathVariable Long id
-    ){
-
-        productService.deleteProduct(id);
-
     }
 
     @GetMapping
-    public Page<ProductResponse> getProducts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ){
-
-        return productService.getProducts(
-                page,
-                size
-        );
+    public List<ProductResponse> getProducts(){
+        return productService.getProducts();
     }
 }

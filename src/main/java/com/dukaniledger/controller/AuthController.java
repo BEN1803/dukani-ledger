@@ -1,13 +1,12 @@
 package com.dukaniledger.controller;
 
 
-import com.dukaniledger.dto.LoginRequest;
-import com.dukaniledger.dto.LoginResponse;
-import com.dukaniledger.dto.RegisterRequest;
-import com.dukaniledger.dto.UserResponse;
+import com.dukaniledger.dto.*;
 import com.dukaniledger.entity.User;
 import com.dukaniledger.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,5 +30,13 @@ public class AuthController {
             @RequestBody LoginRequest request
     ){
         return authService.login(request);
+    }
+
+    @PostMapping("/change-password")
+    public void changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication
+    ){
+        authService.changePassword(authentication.getName(), request);
     }
 }

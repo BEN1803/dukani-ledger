@@ -1,6 +1,5 @@
 package com.dukaniledger.dto;
 
-import com.dukaniledger.entity.User;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,17 +11,21 @@ import java.time.LocalDateTime;
 @Builder
 public class ProductResponse implements Serializable {
     private static final long serialVersionUID = 1L;
+
     private Long id;
-
+    private String productId;
     private String name;
-
     private String category;
 
+    // Synced automatically from purchases.
+    private BigDecimal costPrice;
+
+    // The only field set manually here.
     private BigDecimal sellingPrice;
 
-    private BigDecimal buyingPrice;
+    private String addedByName;
+    private String updatedByName;
 
-    private Integer quantity;
-
-    private String  createdByName;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

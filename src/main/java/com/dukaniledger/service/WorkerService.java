@@ -6,6 +6,7 @@ import com.dukaniledger.repository.BusinessRepository;
 import com.dukaniledger.repository.UserRepository;
 import com.dukaniledger.repository.WorkerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ public class WorkerService {
     private final PasswordEncoder passwordEncoder;
     private final BusinessRepository businessRepository;
 
+    @PreAuthorize("hasRole('OWNER')")
     public Worker addWorker(
             WorkerRequest request,
             String ownerEmail
