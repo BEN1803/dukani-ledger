@@ -63,10 +63,13 @@ public class JwtAuthenticationFilter
         String token =
                 authHeader.substring(7);
 
-
-
-        String email =
-                jwtService.extractEmail(token);
+        String email;
+        try {
+            email = jwtService.extractEmail(token);
+        } catch (io.jsonwebtoken.JwtException e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
 
 
