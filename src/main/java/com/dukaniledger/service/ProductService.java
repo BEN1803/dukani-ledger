@@ -45,6 +45,7 @@ public class ProductService {
                     .name(name)
                     .category(category)
                     .costPrice(costPriceFromPurchase)
+                    .productId(java.util.UUID.randomUUID().toString())
                     .addedBy(currentUser)
                     .updatedBy(currentUser)
                     .build();
