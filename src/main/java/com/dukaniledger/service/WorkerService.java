@@ -61,7 +61,6 @@ public class WorkerService {
         return workerRepository.save(worker);
     }
 
-    @PreAuthorize("hasRole('OWNER')")
     public List<Worker> getWorkers() {
         User owner = businessContextService.getOwnerForCurrentUser();
         Business business = businessRepository.findByOwnerId(owner.getId())
