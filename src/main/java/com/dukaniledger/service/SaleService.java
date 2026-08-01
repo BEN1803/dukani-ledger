@@ -8,6 +8,7 @@ import com.dukaniledger.entity.User;
 import com.dukaniledger.repository.ProductRepository;
 import com.dukaniledger.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class SaleService {
     private final CurrentUserService currentUserService;
     private final ActivityLogService activityLogService;
 
+    @CacheEvict(value = "profits", allEntries = true)
     @Transactional
     public SaleResponse createSale(SaleRequest request){
         Product product = productRepository.findById(request.getProductId())
