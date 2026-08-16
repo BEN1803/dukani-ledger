@@ -2,6 +2,7 @@ package com.dukaniledger.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,5 +37,6 @@ public class Sale {
     @JoinColumn(name = "sold_by", nullable = false)
     private User soldBy;
 
+    @CreationTimestamp
     private LocalDateTime soldAt;
 }
