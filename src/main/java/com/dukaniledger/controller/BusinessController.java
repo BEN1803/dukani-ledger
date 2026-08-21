@@ -1,6 +1,7 @@
 package com.dukaniledger.controller;
 
 import com.dukaniledger.dto.BusinessRequest;
+import com.dukaniledger.dto.OwnerResponse;
 import com.dukaniledger.entity.Business;
 import com.dukaniledger.service.BusinessService;
 import lombok.RequiredArgsConstructor;
@@ -20,5 +21,10 @@ public class BusinessController {
             Authentication authentication
             ){
         return businessService.createBusiness(request);
+    }
+
+    @GetMapping("/owner")
+    public OwnerResponse getOwnerInfo() {
+        return businessService.getOwnerInfo();
     }
 }

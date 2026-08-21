@@ -1,6 +1,7 @@
 package com.dukaniledger.service;
 
 import com.dukaniledger.dto.BusinessRequest;
+import com.dukaniledger.dto.OwnerResponse;
 import com.dukaniledger.entity.Business;
 import com.dukaniledger.entity.Role;
 import com.dukaniledger.entity.User;
@@ -18,6 +19,8 @@ public class BusinessService {
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final BusinessContextService businessContextService;
 
     public Business createBusiness(
             BusinessRequest request
@@ -44,5 +47,24 @@ public class BusinessService {
                 .build();
 
         return businessRepository.save(business);
+    }
+
+    public OwnerResponse getOwnerInfo() {
+        // Works whether the caller is the OWNER themselves or a WORKER
+        // linked to that owner's business.
+        User owner = businessContextService.getOwnerForCurrentUser();
+
+        Business business = businessRepository.findByOwnerId(owner.getId())
+                .orElseThrow(() -> new RuntimeException("Business not found for this owner"));
+
+        return OwnerResponse.builder()
+                .ownerId(owner.getId())
+                .fullname(business.getFullname())
+                .email(owner.getEmail())
+                .phone(business.getPhone())
+                .shopName(business.getShopName())
+                .location(business.getLocation())
+                .createdAt(business.getCreatedAt())
+                .build();
     }
 }
